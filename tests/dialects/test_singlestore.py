@@ -157,7 +157,7 @@ class TestSingleStore(Validator):
         )
         self.validate_generation(
             sql="SELECT * FROM users WHERE name LIKE 'A%'",
-            expected_sql="SELECT * FROM users WHERE name LIKE BINARY 'A%'",
+            expected_sql="SELECT * FROM users WHERE name LIKE 'A%'",
             exp_type=exp.Like
         )
         self.validate_generation(

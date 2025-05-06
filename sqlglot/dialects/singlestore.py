@@ -106,7 +106,6 @@ class SingleStore(Dialect):
             exp.JSONArrayContains: lambda self, e: self.func(
                 "JSON_ARRAY_CONTAINS_JSON", e.expression, e.this),
             exp.ILike: no_ilike_sql,
-            exp.Like: lambda self, e: self.binary(e, "LIKE BINARY"),
         }
 
         # https://docs.singlestore.com/cloud/reference/sql-reference/restricted-keywords/list-of-restricted-keywords/
