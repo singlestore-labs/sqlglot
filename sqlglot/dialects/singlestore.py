@@ -1,5 +1,5 @@
 from sqlglot import Dialect, generator, Tokenizer, TokenType, tokens
-from sqlglot.dialects.dialect import NormalizationStrategy
+from sqlglot.dialects.dialect import NormalizationStrategy, no_ilike_sql
 import typing as t
 from sqlglot import exp
 
@@ -105,6 +105,8 @@ class SingleStore(Dialect):
             exp.NullSafeNEQ: lambda self, e: f"NOT {self.binary(e, '<=>')}",
             exp.JSONArrayContains: lambda self, e: self.func(
                 "JSON_ARRAY_CONTAINS_JSON", e.expression, e.this),
+            exp.ILike: no_ilike_sql,
+            exp.Like: lambda self, e: self.binary(e, "LIKE BINARY"),
         }
 
         # https://docs.singlestore.com/cloud/reference/sql-reference/restricted-keywords/list-of-restricted-keywords/
@@ -1175,10 +1177,6 @@ class SingleStore(Dialect):
         def glob_sql(self, expression: exp.Glob) -> str:
             self.unsupported("GLOB predicate is not supported in SingleStore")
             return super().glob_sql(expression)
-
-        def ilike_sql(self, expression: exp.ILike) -> str:
-            self.unsupported("ILIKE predicate is not supported in SingleStore")
-            return super().ilike_sql(expression)
 
         def ilikeany_sql(self, expression: exp.ILikeAny) -> str:
             self.unsupported(

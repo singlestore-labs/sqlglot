@@ -141,9 +141,8 @@ class TestSingleStore(Validator):
         )
         self.validate_generation(
             sql="SELECT * FROM users WHERE name ILIKE 'john%'",
-            error_message="ILIKE predicate is not supported in SingleStore",
+            expected_sql="SELECT * FROM users WHERE LOWER(name) LIKE LOWER('john%')",
             exp_type=exp.ILike,
-            run=False
         )
         self.validate_generation(
             sql="SELECT * FROM users WHERE name ILIKE ANY ('A%', 'B%')",
@@ -158,6 +157,7 @@ class TestSingleStore(Validator):
         )
         self.validate_generation(
             sql="SELECT * FROM users WHERE name LIKE 'A%'",
+            expected_sql="SELECT * FROM users WHERE name LIKE BINARY 'A%'",
             exp_type=exp.Like
         )
         self.validate_generation(
