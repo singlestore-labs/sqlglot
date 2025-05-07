@@ -1211,6 +1211,8 @@ class SingleStore(Dialect):
             return f"{left_quote}{this}{right_quote}"
 
         def placeholder_sql(self, expression: exp.Placeholder) -> str:
+            # Named parameters are query parameters that are prefixed with a colon (:).
+            # https://docs.oracle.com/cd/E19798-01/821-1841/bnbrh/index.html
             if expression.this:
                 self.unsupported(
                     "Named placeholders are not supported in SingleStore")
