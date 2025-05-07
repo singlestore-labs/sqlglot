@@ -111,6 +111,7 @@ class SingleStore(Dialect):
             exp.ILike: no_ilike_sql,
             exp.Xor: bool_xor_sql,
             exp.IntDiv: lambda self, e: f"{self.binary(e, 'DIV')}",
+            exp.RegexpLike: lambda self, e: self.binary(e, "RLIKE"),
         }
 
         TRANSFORMS.pop(exp.Operator)
@@ -1300,3 +1301,9 @@ class SingleStore(Dialect):
         def jsonbcontains_sql(self, expression: exp.JSONBContains) -> str:
             self.unsupported("JSONBContains is not supported in SingleStore")
             return self.function_fallback_sql(expression)
+
+        def regexpilike_sql(self, expression: exp.RegexpILike) -> str:
+            return self.binary(
+                exp.RegexpLike(
+                    this=exp.Lower(this=expression.this), expression=exp.Lower(this=expression.expression)
+                ), "RLIKE")

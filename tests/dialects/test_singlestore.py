@@ -407,3 +407,13 @@ class TestSingleStore(Validator):
             exp_type=exp.JSONBContains,
             run=False
         )
+        self.validate_generation(
+            sql="SELECT 'abc' ~ 'a.*'",
+            expected_sql="SELECT 'abc' RLIKE 'a.*'",
+            from_dialect="postgres",
+            exp_type=exp.RegexpLike)
+        self.validate_generation(
+            sql="SELECT 'ABC' ~* 'a.*'",
+            expected_sql="SELECT LOWER('ABC') RLIKE LOWER('a.*')",
+            from_dialect="postgres",
+            exp_type=exp.RegexpILike)
