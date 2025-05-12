@@ -1508,11 +1508,6 @@ class SingleStore(Dialect):
             self.unsupported("Arrays are not supported in SingleStore")
             return super().arrayany_sql(expression)
 
-        def arrayconcat_sql(self, expression: exp.ArrayConcat,
-            name: str = "ARRAY_CONCAT") -> str:
-            self.unsupported("Arrays are not supported in SingleStore")
-            return super().arrayconcat_sql(expression)
-
         def arrayconstructcompact_sql(self,
             expression: exp.ArrayConstructCompact):
             self.unsupported("Arrays are not supported in SingleStore")
