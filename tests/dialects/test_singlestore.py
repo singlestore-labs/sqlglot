@@ -1613,7 +1613,7 @@ class TestSingleStore(Validator):
             run=False
         )
 
-    def test_set_operations_sql(self):
+    def test_set_operations_generation(self):
         self.validate_generation(
             sql="SELECT id FROM users UNION SELECT id FROM orders",
             exp_type=exp.Union)
