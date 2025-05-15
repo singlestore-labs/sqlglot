@@ -10,7 +10,8 @@ SINGELSTORE_USER = os.environ.get("SINGELSTORE_USER", "root")
 SINGELSTORE_PASSWORD = os.environ.get("SINGELSTORE_PASSWORD", "1")
 
 conn = s2.connect(host=SINGELSTORE_HOST, port=SINGELSTORE_PORT,
-                  user=SINGELSTORE_USER, password=SINGELSTORE_PASSWORD)
+                  user=SINGELSTORE_USER, password=SINGELSTORE_PASSWORD,
+                  multi_statements=True)
 
 
 class TestSingleStore(Validator):
@@ -1704,3 +1705,118 @@ class TestSingleStore(Validator):
             exp_type=exp.Refresh,
             run=False
         )
+
+    def test_show_generation(self):
+        self.validate_generation(
+            sql="SHOW TABLES",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW DATABASES",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW COLUMNS FROM users",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW INDEX FROM orders",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW GRANTS FOR root",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW FULL TABLES",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW GLOBAL STATUS",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW FULL COLUMNS FROM users",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW GLOBAL VARIABLES",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW TABLES LIKE 'u%'",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW COLUMNS FROM users WHERE Field = 'id'",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW COLUMNS FROM users LIKE 'id'",
+            exp_type=exp.Show)
+        self.validate_generation(
+            sql="SHOW TABLES FROM db",
+            exp_type=exp.Show)
+
+    def test_expressions_generation(self):
+        self.validate_generation(
+            sql="TRUNCATE users, events",
+            expected_sql="TRUNCATE users; TRUNCATE events",
+            exp_type=exp.TruncateTable)
+        self.validate_generation(
+            sql="CREATE SEQUENCE user_id_seq START WITH 42 INCREMENT BY 5 MINVALUE 1 MAXVALUE 1000 CACHE 10",
+            error_message="Sequences are not supported in SingleStore",
+            exp_type=exp.SequenceProperties,
+            run=False
+        )
+        self.validate_generation(
+            sql="CREATE TABLE new_events SHALLOW COPY events",
+            expected_sql="CREATE TABLE new_events LIKE events WITH SHALLOW COPY",
+            exp_type=exp.Clone,
+        )
+        self.validate_generation(
+            sql="DESCRIBE users",
+            exp_type=exp.Describe)
+        self.validate_generation(
+            sql="ATTACH DATABASE memsql_demo",
+            from_dialect="duckdb",
+            exp_type=exp.Attach,
+            run=False
+        )
+        self.validate_generation(
+            sql="DETACH DATABASE memsql_demo",
+            from_dialect="duckdb",
+            exp_type=exp.Detach,
+            run=False
+        )
+        self.validate_generation(
+            sql="SUMMARIZE users",
+            from_dialect="duckdb",
+            error_message="SUMMARIZE query is not supported in SingleStore",
+            exp_type=exp.Summarize,
+            run=False
+        )
+        self.validate_generation(
+            sql="KILL QUERY 123",
+            exp_type=exp.Kill,
+            run=False
+        )
+        self.validate_generation(
+            sql="PRAGMA foreign_keys = OFF",
+            error_message="PRAGMA query is not supported in SingleStore",
+            exp_type=exp.Pragma,
+            run=False
+        )
+        self.validate_generation(
+            sql="DECLARE @myVar INT",
+            expected_sql="DECLARE myVar INT",
+            from_dialect="tsql",
+            exp_type=exp.Declare,
+            run=False
+        )
+        self.validate_generation(
+            sql="DECLARE @myVar INT",
+            expected_sql="DECLARE myVar INT",
+            from_dialect="tsql",
+            exp_type=exp.DeclareItem,
+            run=False
+        )
+        self.validate_generation(
+            sql="SET @a = 1",
+            exp_type=exp.Set)
+        self.validate_generation(
+            sql="SET @x = 42",
+            exp_type=exp.SetItem)
+        self.validate_generation(
+            sql="SELECT $a$this is a heredoc string$a$",
+            expected_sql="SELECT 'this is a heredoc string'",
+            from_dialect="postgres")
