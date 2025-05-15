@@ -2041,3 +2041,22 @@ class SingleStore(Dialect):
             self.unsupported(
                 "NEXT_VALUE_FOR function is not supported in SingleStore")
             return super().nextvaluefor_sql(expression)
+
+        @unsupported_args("kind")
+        def select_sql(self, expression: exp.Select) -> str:
+            return super().select_sql(expression)
+
+        def cache_sql(self, expression: exp.Cache) -> str:
+            self.unsupported(
+                "CACHE query is not supported in SingleStore")
+            return super().cache_sql(expression)
+
+        def uncache_sql(self, expression: exp.Uncache) -> str:
+            self.unsupported(
+                "UNCACHE query is not supported in SingleStore")
+            return super().uncache_sql(expression)
+
+        def refresh_sql(self, expression: exp.Refresh) -> str:
+            self.unsupported(
+                "REFRESH query is not supported in SingleStore")
+            return super().refresh_sql(expression)
