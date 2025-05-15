@@ -1623,3 +1623,84 @@ class TestSingleStore(Validator):
         self.validate_generation(
             sql="SELECT id FROM users INTERSECT SELECT id FROM orders",
             exp_type=exp.Intersect)
+
+    def test_select_generation(self):
+        # Basic SELECT
+        self.validate_generation(
+            sql="SELECT id, name FROM users",
+            exp_type=exp.Select)
+        # SELECT with DISTINCT
+        self.validate_generation(
+            sql="SELECT DISTINCT name FROM users",
+            exp_type=exp.Select)
+        # SELECT with LIMIT
+        self.validate_generation(
+            sql="SELECT id FROM users LIMIT 10",
+            exp_type=exp.Select)
+        # SELECT with WHERE
+        self.validate_generation(
+            sql="SELECT * FROM users WHERE age > 18",
+            exp_type=exp.Select)
+        # SELECT with GROUP BY
+        self.validate_generation(
+            sql="SELECT name, COUNT(*) FROM users GROUP BY name",
+            exp_type=exp.Select)
+        # SELECT with HAVING
+        self.validate_generation(
+            sql="SELECT name, COUNT(*) FROM users GROUP BY name HAVING COUNT(*) > 1",
+            exp_type=exp.Select)
+        # SELECT with ORDER BY
+        self.validate_generation(
+            sql="SELECT id FROM users ORDER BY name",
+            exp_type=exp.Select)
+        # SELECT with LIMIT + OFFSET
+        self.validate_generation(
+            sql="SELECT id FROM users LIMIT 10 OFFSET 5",
+            exp_type=exp.Select)
+        # SELECT with HINT
+        self.validate_generation(
+            sql="SELECT /*+ BROADCAST(users) */ id FROM users",
+            exp_type=exp.Select)
+        # SELECT with OPERATION MODIFIERS
+        self.validate_generation(
+            sql="SELECT HIGH_PRIORITY id FROM users",
+            exp_type=exp.Select)
+        # SELECT with CTE
+        self.validate_generation(
+            sql="WITH active_users AS (SELECT * FROM users WHERE is_active = TRUE) SELECT id FROM active_users",
+            exp_type=exp.Select)
+        # SELECT INTO must become CREATE TABLE AS
+        self.validate_generation(
+            sql="SELECT * INTO archived_users FROM users",
+            expected_sql="CREATE TABLE archived_users AS SELECT * FROM users",
+            exp_type=exp.Select)
+        # SELECT with kind
+        self.validate_generation(
+            sql="SELECT AS STRUCT id, name FROM users",
+            from_dialect="bigquery",
+            expected_sql="SELECT STRUCT(id, name) FROM users",
+            error_message="Argument 'kind' is not supported for expression 'Select' when targeting SingleStore.",
+            exp_type=exp.Select,
+            run=False
+        )
+
+    def test_cache_generation(self):
+        self.validate_generation(
+            sql="CACHE TABLE users",
+            error_message="CACHE query is not supported in SingleStore",
+            exp_type=exp.Cache,
+            run=False
+        )
+        self.validate_generation(
+            sql="UNCACHE TABLE users",
+            error_message="UNCACHE query is not supported in SingleStore",
+            exp_type=exp.Uncache,
+            run=False
+        )
+        self.validate_generation(
+            sql="REFRESH TABLE users",
+            from_dialect="spark2",
+            error_message="REFRESH query is not supported in SingleStore",
+            exp_type=exp.Refresh,
+            run=False
+        )
