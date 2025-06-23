@@ -280,7 +280,7 @@ class SingleStore(Dialect):
             exp.TsOrDsToTimestamp: lambda self, e: self.sql(
                 exp.cast(e.this, exp.DataType.Type.TIMESTAMP)),
             exp.TsOrDiToDi: lambda self,
-                                   e: f"(DATE_FORMAT({self.sql(e, 'this')}, {SingleStore.DATEINT_FORMAT}) :> INT)",
+                e: f"(DATE_FORMAT({self.sql(e, 'this')}, {SingleStore.DATEINT_FORMAT}) :> INT)",
             exp.UnixToStr: lambda self, e: self.func(
                 "FROM_UNIXTIME", e.this, time_format("singlestore")(self, e)
             ),
@@ -1795,7 +1795,7 @@ class SingleStore(Dialect):
                              expression.expression)
 
         def jsonbextractscalar_sql(self,
-                                   expression: exp.JSONBExtractScalar) -> str:
+            expression: exp.JSONBExtractScalar) -> str:
             return self.func("BSON_EXTRACT_STRING", expression.this,
                              expression.expression)
 
@@ -2659,16 +2659,16 @@ class SingleStore(Dialect):
                 "COMPRESS column constraint is not supported in SingleStore")
             return ""
 
-        def encodecolumnconstraint_sql(self,
-                                       expression: exp.EncodeColumnConstraint) -> str:
-            self.unsupported(
-                "ENCODE column constraint is not supported in SingleStore")
-            return ""
-
         def dateformatcolumnconstraint_sql(self,
             expression: exp.DateFormatColumnConstraint) -> str:
             self.unsupported(
                 "FORMAT column constraint is not supported in SingleStore")
+            return ""
+
+        def encodecolumnconstraint_sql(self,
+                                       expression: exp.EncodeColumnConstraint) -> str:
+            self.unsupported(
+                "ENCODE column constraint is not supported in SingleStore")
             return ""
 
         def excludecolumnconstraint_sql(self,
@@ -3618,7 +3618,7 @@ class SingleStore(Dialect):
             return f"{self.seg(op_sql)} {this_sql}{on_sql}"
 
         def withschemabindingproperty_sql(self,
-                                          expression: exp.WithSchemaBindingProperty) -> str:
+            expression: exp.WithSchemaBindingProperty) -> str:
             if isinstance(expression.this,
                           exp.Var) and expression.this.this == "BINDING":
                 return "SCHEMA_BINDING=ON"
@@ -3626,7 +3626,7 @@ class SingleStore(Dialect):
             return ""
 
         def viewattributeproperty_sql(self,
-                                      expression: exp.ViewAttributeProperty) -> str:
+            expression: exp.ViewAttributeProperty) -> str:
             if expression.this == "SCHEMABINDING":
                 return "SCHEMA_BINDING=ON"
             self.unsupported("Unsupported property viewattribute")
@@ -3649,7 +3649,7 @@ class SingleStore(Dialect):
 
             properties_sql = ""
             if properties_locs.get(
-                    exp.Properties.Location.POST_SCHEMA) or properties_locs.get(
+                exp.Properties.Location.POST_SCHEMA) or properties_locs.get(
                 exp.Properties.Location.POST_WITH
             ):
                 properties_sql = self.sql(
@@ -3735,13 +3735,13 @@ class SingleStore(Dialect):
             return self.prepend_ctes(expression, expression_sql)
 
         def schema_sql(self, expression: exp.Schema,
-                       indexes: str = None) -> str:
+            indexes: str = None) -> str:
             this = self.sql(expression, "this")
             sql = self.schema_columns_sql(expression, indexes)
             return f"{this} {sql}" if this and sql else this or sql
 
         def schema_columns_sql(self, expression: exp.Schema,
-                               indexes: str = None) -> str:
+            indexes: str = None) -> str:
             if expression.expressions:
                 indexes = f"{self.sep(', ')}{indexes}" if indexes else ""
                 return f"({self.sep('')}{self.expressions(expression)}{indexes}{self.seg(')', sep='')}"

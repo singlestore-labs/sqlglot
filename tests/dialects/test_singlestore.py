@@ -89,9 +89,9 @@ class TestSingleStore(Validator):
                 """CREATE OR REPLACE PROCEDURE proc() RETURNS void AS BEGIN ECHO SELECT 1; END""")
 
     def validate_generation(self,
-                            sql: str, expected_sql: str = None, error_message: str = None,
-                            from_dialect="mysql", exp_type: t.Type[exp.Expression] = None,
-                            run: bool = True):
+        sql: str, expected_sql: str = None, error_message: str = None,
+        from_dialect="mysql", exp_type: t.Type[exp.Expression] = None,
+        run: bool = True):
         query = parse_one(sql, read=from_dialect)
 
         # check that expression which is validated is somewhere in the query
@@ -120,7 +120,7 @@ class TestSingleStore(Validator):
             self.assertEqual(sql, generated)
 
     def validate_parsing(self, sql: str,
-                         expected_expr: exp.Expression):
+        expected_expr: exp.Expression):
 
         query = parse_one(sql, read="singlestore")
         expr = query.find(type(expected_expr))
