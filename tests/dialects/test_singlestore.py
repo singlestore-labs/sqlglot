@@ -49,7 +49,8 @@ class TestSingleStore(Validator):
     name VARCHAR(100),
     price DECIMAL(10, 2),
     category VARCHAR(50),
-    stock_quantity INT
+    stock_quantity INT,
+    FULLTEXT USING VERSION 1 ind (name)
 );
 """)
             cur.execute("""CREATE TABLE order_items (
@@ -1316,9 +1317,7 @@ class TestSingleStore(Validator):
         )
         self.validate_generation(
             sql="SELECT MATCH(name, name) AGAINST('book') FROM products",
-            error_message="MATCH_AGAINST function is not supported in SingleStore",
             exp_type=exp.MatchAgainst,
-            run=False
         )
         self.validate_generation(
             sql="SELECT MD5(email) FROM users",
@@ -1574,9 +1573,8 @@ class TestSingleStore(Validator):
             exp_type=exp.Unhex)
         self.validate_generation(
             sql="SELECT UNICODE('a')",
-            error_message="UNICODE function is not supported in SingleStore",
+            expected_sql="SELECT ASCII('a')",
             exp_type=exp.Unicode,
-            run=False
         )
         self.validate_generation(
             sql="SELECT UNIX_DATE(DATE '2024-01-01')",
@@ -4520,4 +4518,189 @@ class TestSingleStore(Validator):
                      exp.Literal.string("a"),
                      exp.Literal.string("b"),
                      exp.Literal.string("c"))
+        )
+        self.validate_parsing(
+            "SELECT ESTIMATED_QUERY_LEAF_MEMORY() FROM users",
+            exp.func("ESTIMATED_QUERY_LEAF_MEMORY")
+        )
+        self.validate_parsing(
+            "SELECT ESTIMATED_QUERY_RUNTIME() FROM users",
+            exp.func("ESTIMATED_QUERY_RUNTIME")
+        )
+        self.validate_parsing(
+            "SELECT EUCLIDEAN_DISTANCE(name, name) FROM users",
+            exp.Distance(
+                this=exp.Column(this=exp.Identifier(this="name", quoted=False)),
+                expression=exp.Column(this=exp.Identifier(this="name", quoted=False))
+            )
+        )
+        self.validate_parsing(
+            "SELECT EXP(age) FROM users",
+            exp.Exp(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False))
+            )
+        )
+        self.validate_parsing(
+            "SELECT EXTRACT(YEAR FROM signup_date) FROM users",
+            exp.Extract(
+                this=exp.Var(this="YEAR"),
+                expression=exp.Column(this=exp.Identifier(this="signup_date", quoted=False))
+            )
+        )
+        self.validate_parsing(
+            "SELECT FIELD(name, 'Alice', 'Bob') FROM users",
+            exp.Case(
+                this=exp.Column(this=exp.Identifier(this="name", quoted=False)),
+                ifs=[
+                    exp.If(
+                        this=exp.Literal.string("Alice"),
+                        true=exp.Literal.number(1),
+                    ),
+                    exp.If(
+                        this=exp.Literal.string("Bob"),
+                        true=exp.Literal.number(2),
+                    ),
+                ],
+                default=exp.Literal.number(0)
+            )
+        )
+        self.validate_parsing(
+            "SELECT FIRST(id) FROM orders",
+            exp.First(this=exp.Column(this=exp.Identifier(this="id", quoted=False))))
+        self.validate_parsing(
+            "SELECT FIRST(age, signup_date) FROM users",
+            exp.First(this=exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                      expression=exp.Column(this=exp.Identifier(this="signup_date", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT FIRST_VALUE(age) OVER (ORDER BY signup_date) FROM users",
+            exp.FirstValue(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False))
+            )
+        )
+        self.validate_parsing(
+            "SELECT FLOOR(age) FROM users",
+            exp.Floor(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False))
+            )
+        )
+        self.validate_parsing(
+            "SELECT FORMAT(age, 2) FROM users",
+            exp.func("FORMAT",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Literal.number(2))
+        )
+        self.validate_parsing(
+            "SELECT FOUND_ROWS()",
+            exp.func("FOUND_ROWS")
+        )
+        self.validate_parsing(
+            "SELECT FROM_BASE64('SGVsbG8=') FROM users",
+            exp.FromBase64(
+                     this=exp.Literal.string("SGVsbG8="))
+        )
+        self.validate_parsing(
+            "SELECT FROM_DAYS(738000) FROM users",
+            exp.func("FROM_DAYS",
+                     exp.Literal.number(738000))
+        )
+        self.validate_parsing(
+            "SELECT FROM_UNIXTIME(1609459200) FROM users",
+            exp.UnixToTime(this=exp.Literal.number(1609459200))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_AREA(age) FROM users",
+            exp.func("GEOGRAPHY_AREA",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_CONTAINS(age, age) FROM users",
+            exp.func("GEOGRAPHY_CONTAINS",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_DISTANCE(age, age) FROM users",
+            exp.func("GEOGRAPHY_DISTANCE",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_INTERSECTS(age, age) FROM users",
+            exp.func("GEOGRAPHY_INTERSECTS",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_LATITUDE(age) FROM users",
+            exp.func("GEOGRAPHY_LATITUDE",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_LENGTH(age) FROM users",
+            exp.func("GEOGRAPHY_LENGTH",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_LONGITUDE(age) FROM users",
+            exp.func("GEOGRAPHY_LONGITUDE",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_POINT(48.2, 16.4) FROM users",
+
+            exp.func("GEOGRAPHY_POINT",
+                     exp.Literal.number(48.2),
+                     exp.Literal.number(16.4))
+        )
+        self.validate_parsing(
+            "SELECT GEOGRAPHY_WITHIN_DISTANCE(age, age, 100) FROM users",
+            exp.func("GEOGRAPHY_WITHIN_DISTANCE",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Literal.number(100))
+        )
+        self.validate_parsing(
+            "SELECT GET_FORMAT(DATE, 'USA') FROM users",
+            exp.func("GET_FORMAT",
+                     exp.Var(this="DATE"),
+                     exp.Literal.string("USA"))
+        )
+        self.validate_parsing(
+            "SELECT GREATEST(age, 25, 30) FROM users",
+            exp.Greatest(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                expressions=[
+                    exp.Literal.number(25),
+                    exp.Literal.number(30)
+                ]
+            )
+        )
+        self.validate_parsing(
+            "SELECT GROUP_CONCAT(name) FROM users",
+            exp.GroupConcat(
+                this=exp.Column(this=exp.Identifier(this="name", quoted=False))
+            )
+        )
+        self.validate_parsing(
+            "SELECT HEX(email) FROM users",
+            exp.Hex(this=exp.Column(this=exp.Identifier(this="email", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT HOUR(signup_date) FROM users",
+            exp.cast(exp.TimeToStr(
+                this=exp.Column(this=exp.Identifier(this="signup_date", quoted=False)),
+                format=exp.Literal.string("%-H")
+            ), exp.DataType.Type.INT),
+        )
+        self.validate_parsing(
+            "SELECT IF(age > 18, 'adult', 'minor') FROM users",
+            exp.If(
+                this=exp.GT(
+                    this=exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                    expression=exp.Literal.number(18)
+                ),
+                true=exp.Literal.string("adult"),
+                false=exp.Literal.string("minor")
+            )
         )
