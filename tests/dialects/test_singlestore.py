@@ -907,6 +907,7 @@ class TestSingleStore(Validator):
             exp_type=exp.Cbrt)
         self.validate_generation(
             sql="SELECT CURRENT_DATE",
+            expected_sql="SELECT CURRENT_DATE()",
             exp_type=exp.CurrentDate)
         self.validate_generation(
             sql="SELECT CURRENT_DATETIME",
@@ -1013,8 +1014,9 @@ class TestSingleStore(Validator):
             expected_sql="SELECT DATE_SUB(created_at, INTERVAL '1' HOUR) FROM orders",
             exp_type=exp.TimestampSub)
         self.validate_generation(
-            sql="SELECT TIMESTAMP_DIFF(DAY, created_at, NOW()) FROM orders",
+            sql="SELECT TIMESTAMP_DIFF(NOW(), created_at, DAY) FROM orders",
             expected_sql="SELECT TIMESTAMPDIFF(DAY, created_at, NOW()) FROM orders",
+            from_dialect="bigquery",
             exp_type=exp.TimestampDiff)
         self.validate_generation(
             sql="SELECT TIMESTAMP_TRUNC(created_at, HOUR) FROM orders",
@@ -1526,8 +1528,8 @@ class TestSingleStore(Validator):
             expected_sql="SELECT '12:00:00' :> TIME",
             exp_type=exp.Time)
         self.validate_generation(
-            sql="SELECT TIME_TO_STR('12:00:00', '%H:%i:%s')",
-            expected_sql="SELECT DATE_FORMAT('12:00:00' :> TIME, '%H:%i:%s')",
+            sql="SELECT TIME_TO_STR(NOW(), '%H:%i:%s')",
+            expected_sql="SELECT DATE_FORMAT(NOW(), '%H:%i:%s')",
             exp_type=exp.TimeToStr)
         self.validate_generation(
             sql="SELECT TIME_TO_UNIX(TIME '12:00:00')",
@@ -5626,4 +5628,222 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT TIMESTAMP('2024-01-01 10:00:00') FROM users",
             exp.Timestamp(this=exp.Literal.string("2024-01-01 10:00:00"))
+        )
+        self.validate_parsing(
+            "SELECT TIMESTAMPADD(DAY, 7, signup_date) FROM users",
+            exp.TimestampAdd(unit=exp.Var(this="DAY"),
+                             expression=exp.Literal.number(7),
+                             this=exp.Column(
+                                 this=exp.Identifier(
+                                     this="signup_date", quoted=False
+                                 )
+                             ))
+        )
+        self.validate_parsing(
+            "SELECT TIMESTAMPDIFF(DAY, signup_date, CURRENT_DATE) FROM users",
+            exp.TimestampDiff(
+                unit=exp.Var(this="DAY"),
+                expression=exp.Column(
+                    this=exp.Identifier(this="signup_date", quoted=False)),
+                this=exp.CurrentDate())
+        )
+        self.validate_parsing(
+            "SELECT TO_BASE64(email) FROM users",
+            exp.ToBase64(this=exp.Column(
+                         this=exp.Identifier(this="email", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT TO_CHAR(signup_date, 'YYYY-MM-DD') FROM users",
+            exp.TimeToStr(this=exp.Column(
+                         this=exp.Identifier(this="signup_date", quoted=False)),
+                     format=exp.Literal.string("%Y-%m-%d"))
+        )
+        self.validate_parsing(
+            "SELECT TO_DATE('2024-01-01', 'YYYY-MM-DD') FROM users",
+            exp.StrToDate(
+                     this=exp.Literal.string("2024-01-01"),
+                     format=exp.Literal.string("%Y-%m-%d"))
+        )
+        self.validate_parsing(
+            "SELECT TO_DAYS(signup_date) FROM users",
+            exp.func("TO_DAYS",
+                     exp.Column(
+                         this=exp.Identifier(this="signup_date", quoted=False)))
+        )
+
+        self.validate_parsing(
+            "SELECT TO_JSON(name) FROM users",
+            exp.func("TO_JSON",
+                     exp.Column(this=exp.Identifier(this="name", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT TO_JSON(users.*) FROM users",
+            exp.func("TO_JSON", exp.Column(this=exp.Star(),
+                                      table=exp.Identifier(this="users", quoted=False)))
+        )
+        # TODO: add support of the struct type
+        # self.validate_parsing(
+        #     "SELECT TO_JSON(ROW(1,2):>RECORD(a INT, b INT)) AS RowOutput",
+        #     exp.func("TO_JSON",
+        #              exp.Column(this=exp.Identifier(this="name", quoted=False)))
+        # )
+        self.validate_parsing(
+            "SELECT TO_NUMBER(age, '999999.99') FROM users",
+            exp.ToNumber(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                format=exp.Literal.string("999999.99")
+            )
+        )
+
+        self.validate_parsing(
+            "SELECT TO_SECONDS(signup_date) FROM users",
+            exp.func("TO_SECONDS",
+                     exp.Column(
+                         this=exp.Identifier(this="signup_date", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT TO_TIMESTAMP('The date and time are 01/01/2018 2:30:15.123456', 'The date and time are MM/DD/YYYY HH:MI:SS.FF6') AS result",
+            exp.StrToTime(
+                this=exp.Literal.string("The date and time are 01/01/2018 2:30:15.123456"),
+                format=exp.Literal.string("The date and time are %m/%d/%Y %I:%M:%S.%f")
+            )
+        )
+        self.validate_parsing(
+            "SELECT TRIM(name) FROM users",
+            exp.Trim(
+                this=exp.Column(this=exp.Identifier(this="name", quoted=False))
+            )
+        )
+        self.validate_parsing(
+            "SELECT TRUNC(signup_date, 'Y') FROM users",
+            exp.func("TRUNC",
+                     exp.Column(
+                         this=exp.Identifier(this="signup_date", quoted=False)),
+                     exp.Literal.string("Y"))
+        )
+        self.validate_parsing(
+            "SELECT TRUNCATE(age, 1) FROM users",
+            exp.func("TRUNCATE",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Literal.number(1))
+        )
+        self.validate_parsing(
+            "SELECT UCASE(name) FROM users",
+            exp.Upper(this=
+                     exp.Column(this=exp.Identifier(this="name", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT UNHEX('4D2') FROM users",
+            exp.Unhex(this=exp.Literal.string("4D2"))
+        )
+        self.validate_parsing(
+            "SELECT UNIX_TIMESTAMP(signup_date) FROM users",
+            exp.StrToUnix(this=exp.Column(
+                this=exp.Identifier(this="signup_date", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT USER() FROM users",
+            exp.CurrentUser()
+        )
+        self.validate_parsing(
+            "SELECT UTC_DATE() FROM users",
+            exp.CurrentDate(
+                this=exp.Literal.string("UTC")
+            )
+        )
+        self.validate_parsing(
+            "SELECT UTC_TIME() FROM users",
+            exp.CurrentTime(
+                this=exp.Literal.string("UTC")
+            )
+        )
+        self.validate_parsing(
+            "SELECT UTC_TIMESTAMP() FROM users",
+            exp.CurrentTimestamp(
+                this=exp.Literal.string("UTC")
+            )
+        )
+        self.validate_parsing(
+            "SELECT UUID_TO_BIN(UUID()) FROM users",
+            exp.func("UUID_TO_BIN",
+                     exp.func("UUID"))
+        )
+        self.validate_parsing(
+            "SELECT VARIANCE(age) FROM users",
+            exp.VariancePop(
+                     this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT VAR_SAMP(age) FROM users",
+            exp.Variance(
+                     this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT VECTOR_ADD(age, age) FROM users",
+            exp.func("VECTOR_ADD",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT VECTOR_ELEMENTS_SUM(age) FROM users",
+            exp.func("VECTOR_ELEMENTS_SUM",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT VECTOR_KTH_ELEMENT(age, 2) FROM users",
+            exp.func("VECTOR_KTH_ELEMENT",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Literal.number(2))
+        )
+        self.validate_parsing(
+            "SELECT VECTOR_MUL(age, age) FROM users",
+            exp.func("VECTOR_MUL",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT VECTOR_NUM_ELEMENTS(age) FROM users",
+            exp.func("VECTOR_NUM_ELEMENTS",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT VECTOR_SORT(age) FROM users",
+            exp.func("VECTOR_SORT",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+
+        self.validate_parsing(
+            "SELECT VECTOR_SUB(age, age) FROM users",
+            exp.func("VECTOR_SUB",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT VECTOR_SUBVECTOR(age, 1, 2) FROM users",
+            exp.func("VECTOR_SUBVECTOR",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)),
+                     exp.Literal.number(1),
+                     exp.Literal.number(2))
+        )
+        self.validate_parsing(
+            "SELECT VECTOR_SUM(age) FROM users",
+            exp.func("VECTOR_SUM",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT WEEK(signup_date) FROM users",
+            exp.Week(this=exp.Column(
+                         this=exp.Identifier(this="signup_date", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT WEEKDAY(signup_date) FROM users",
+            exp.DayOfWeek(this=exp.Column(
+                         this=exp.Identifier(this="signup_date", quoted=False)))
+        )
+        self.validate_parsing(
+            "SELECT YEAR(signup_date) FROM users",
+            exp.Year(
+                this=exp.Column(
+                    this=exp.Identifier(this="signup_date", quoted=False))
+            )
         )
