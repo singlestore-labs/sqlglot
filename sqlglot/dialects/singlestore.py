@@ -14,6 +14,7 @@ from sqlglot.expressions import DataType
 from sqlglot.generator import ESCAPED_UNICODE_RE, unsupported_args
 from sqlglot.helper import csv, seq_get
 from sqlglot.parser import build_coalesce
+from sqlglot.time import format_time
 from sqlglot.trie import new_trie
 
 
@@ -108,6 +109,30 @@ class SingleStore(Dialect):
         "%%": "%%",
     }
 
+    TIME_MAPPING_HR: t.Dict[str, str] = {
+        "AM": "%p",  # Meridian indicator with or without periods
+        "A.M.": "%p",  # Meridian indicator with or without periods
+        "PM": "%p",  # Meridian indicator with or without periods
+        "P.M.": "%p",  # Meridian indicator with or without periods
+        "D": "%u",  # Day of week (1-7)
+        "DD": "%d",  # day of month (1-31)
+        "DY": "%a",  # abbreviated name of day
+        "HH": "%I",  # Hour of day (1-12)
+        "HH12": "%I",  # alias for HH
+        "HH24": "%H",  # Hour of day (0-23)
+        "MI": "%M",  # Minute (0-59)
+        "MM": "%m",  # Month (01-12; January = 01)
+        "MON": "%b",  # Abbreviated name of month
+        "MONTH": "%B",  # Name of month
+        "SS": "%S",  # Second (0-59)
+        "RR": "%y",  # 15
+        "YY": "%y",  # 15
+        "YYYY": "%Y",  # 2015
+        "FF6": "%f",  # only 6 digits are supported in python formats
+    }
+
+    TIME_TRIE_HR = new_trie(TIME_MAPPING_HR)
+
     FORCE_EARLY_ALIAS_REF_EXPANSION = True
     SUPPORTS_ORDER_BY_ALL = True
     PROMOTE_TO_INFERRED_DATETIME_TYPE = True
@@ -115,6 +140,24 @@ class SingleStore(Dialect):
     CREATABLE_KIND_MAPPING: dict[str, str] = {
         "DATABASE": "SCHEMA"
     }
+
+    @classmethod
+    def _format_time_hr(cls, expression: t.Optional[str | exp.Expression]) -> \
+    t.Optional[exp.Expression]:
+        """Converts a time format in this dialect to its equivalent Python `strftime` format."""
+        if isinstance(expression, str):
+            return exp.Literal.string(
+                # the time formats are quoted
+                format_time(expression[1:-1], cls.TIME_MAPPING_HR,
+                                cls.TIME_TRIE_HR)
+            )
+
+        if expression and expression.is_string:
+            return exp.Literal.string(
+                format_time(expression.this, cls.TIME_MAPPING_HR,
+                                cls.TIME_TRIE_HR))
+
+        return expression
 
     class Tokenizer(tokens.Tokenizer):
         BIT_STRINGS = [("b'", "'"), ("B'", "'"), ("0b", "")]
