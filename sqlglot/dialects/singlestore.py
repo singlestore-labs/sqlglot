@@ -143,19 +143,19 @@ class SingleStore(Dialect):
 
     @classmethod
     def _format_time_hr(cls, expression: t.Optional[str | exp.Expression]) -> \
-    t.Optional[exp.Expression]:
+        t.Optional[exp.Expression]:
         """Converts a time format in this dialect to its equivalent Python `strftime` format."""
         if isinstance(expression, str):
             return exp.Literal.string(
                 # the time formats are quoted
                 format_time(expression[1:-1], cls.TIME_MAPPING_HR,
-                                cls.TIME_TRIE_HR)
+                            cls.TIME_TRIE_HR)
             )
 
         if expression and expression.is_string:
             return exp.Literal.string(
                 format_time(expression.this, cls.TIME_MAPPING_HR,
-                                cls.TIME_TRIE_HR))
+                            cls.TIME_TRIE_HR))
 
         return expression
 
@@ -269,32 +269,35 @@ class SingleStore(Dialect):
             "RADIANS": lambda args: exp.Mul(
                 this=seq_get(args, 0),
                 expression=exp.Literal.number(math.pi / 180.0)),
-            "REGEXP_MATCH": lambda args: exp.RegexpExtractAll(this=seq_get(args, 0),
-                                                              expression=seq_get(args, 1),
-                                                              parameters=seq_get(args, 2)),
-            "REGEXP_REPLACE": lambda args: exp.RegexpReplace(this=seq_get(args, 0),
-                                                             expression=seq_get(args, 1),
-                                                             replacement=seq_get(args, 2),
-                                                             modifiers=seq_get(args, 3)),
-            "REGEXP_SUBSTR": lambda args: exp.RegexpExtract(this=seq_get(args, 0),
-                                                               expression=seq_get(args, 1),
-                                                               position=seq_get(args, 2),
-                                                               occurrence=seq_get(args, 3),
-                                                               parameters=seq_get(args, 4)),
+            "REGEXP_MATCH": lambda args: exp.RegexpExtractAll(
+                this=seq_get(args, 0),
+                expression=seq_get(args, 1),
+                parameters=seq_get(args, 2)),
+            "REGEXP_REPLACE": lambda args: exp.RegexpReplace(
+                this=seq_get(args, 0),
+                expression=seq_get(args, 1),
+                replacement=seq_get(args, 2),
+                modifiers=seq_get(args, 3)),
+            "REGEXP_SUBSTR": lambda args: exp.RegexpExtract(
+                this=seq_get(args, 0),
+                expression=seq_get(args, 1),
+                position=seq_get(args, 2),
+                occurrence=seq_get(args, 3),
+                parameters=seq_get(args, 4)),
             "SECOND": lambda args: exp.cast(exp.TimeToStr(
                 this=seq_get(args, 0),
                 format=Dialect["singlestore"].format_time(
                     exp.Literal.string("%s")),
             ), DataType.Type.INT),
             "SIGMOID": lambda args: exp.Div(
-                this = exp.Literal.number(1),
-                expression = exp.Paren( this=exp.Add(
-                    this = exp.Literal.number(1),
-                    expression = exp.Exp(
-                        this = exp.Neg(
-                            this = seq_get(args, 0)))
-                    ))
-                ),
+                this=exp.Literal.number(1),
+                expression=exp.Paren(this=exp.Add(
+                    this=exp.Literal.number(1),
+                    expression=exp.Exp(
+                        this=exp.Neg(
+                            this=seq_get(args, 0)))
+                ))
+            ),
             "STD": exp.Stddev.from_arg_list,
             "STR_TO_DATE": _str_to_date,
             "TIME": lambda args: exp.cast(seq_get(args, 0),
@@ -2250,27 +2253,33 @@ class SingleStore(Dialect):
         def currentdate_sql(self, expression: exp.CurrentDate) -> str:
             timezone = expression.this
             if timezone:
-                if isinstance(timezone, exp.Literal) and timezone.this.lower() == "utc":
+                if isinstance(timezone,
+                              exp.Literal) and timezone.this.lower() == "utc":
                     return self.func("UTC_DATE")
-                self.unsupported("CurrentDate with timezone is not supported in SingleStore")
+                self.unsupported(
+                    "CurrentDate with timezone is not supported in SingleStore")
 
             return self.func("CURRENT_DATE")
 
         def currenttime_sql(self, expression: exp.CurrentTime) -> str:
             timezone = expression.this
             if timezone:
-                if isinstance(timezone, exp.Literal) and timezone.this.lower() == "utc":
+                if isinstance(timezone,
+                              exp.Literal) and timezone.this.lower() == "utc":
                     return self.func("UTC_TIME")
-                self.unsupported("CurrentTime with timezone is not supported in SingleStore")
+                self.unsupported(
+                    "CurrentTime with timezone is not supported in SingleStore")
 
             return self.func("CURRENT_TIME")
 
         def currenttimestamp_sql(self, expression: exp.CurrentTimestamp) -> str:
             timezone = expression.this
             if timezone:
-                if isinstance(timezone, exp.Literal) and timezone.this.lower() == "utc":
+                if isinstance(timezone,
+                              exp.Literal) and timezone.this.lower() == "utc":
                     return self.func("UTC_TIMESTAMP")
-                self.unsupported("CurrentTimestamp with timezone is not supported in SingleStore")
+                self.unsupported(
+                    "CurrentTimestamp with timezone is not supported in SingleStore")
 
             return self.func("CURRENT_TIMESTAMP")
 
@@ -4008,15 +4017,19 @@ class SingleStore(Dialect):
 
         def timediff_sql(self, expression: exp.TimeDiff):
             if expression.args.get("unit") is not None:
-                return self.func("TIMESTAMPDIFF", expression.args.get("unit"), expression.this, expression.expression)
+                return self.func("TIMESTAMPDIFF", expression.args.get("unit"),
+                                 expression.this, expression.expression)
             else:
-                return self.func("TIMEDIFF", expression.this, expression.expression)
+                return self.func("TIMEDIFF", expression.this,
+                                 expression.expression)
 
         def timestampadd_sql(self, expression: exp.TimestampAdd) -> str:
             if expression.args.get("unit") is not None:
-                return self.func("TIMESTAMPADD", expression.args.get("unit"), expression.expression, expression.this)
+                return self.func("TIMESTAMPADD", expression.args.get("unit"),
+                                 expression.expression, expression.this)
             else:
-                return self.func("DATE_ADD", expression.this, expression.expression)
+                return self.func("DATE_ADD", expression.this,
+                                 expression.expression)
 
         def timestampdiff_sql(self, expression: exp.TimestampDiff) -> str:
             if expression.args.get("unit") is not None:

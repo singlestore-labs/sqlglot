@@ -4490,12 +4490,12 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT DAYOFWEEK(signup_date) FROM users",
             exp.DayOfWeek(this=exp.Column(
-                        this=exp.Identifier(this="signup_date", quoted=False)))
+                this=exp.Identifier(this="signup_date", quoted=False)))
         )
         self.validate_parsing(
             "SELECT DAYOFYEAR(signup_date) FROM users",
             exp.DayOfYear(this=exp.Column(
-                        this=exp.Identifier(this="signup_date", quoted=False)))
+                this=exp.Identifier(this="signup_date", quoted=False)))
         )
         self.validate_parsing(
             "SELECT DECODE(age, 18, 'minor', 21, 'young adult', 'adult') FROM users",
@@ -5005,18 +5005,21 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT LAST(id) FROM orders",
-            exp.Last(this=exp.Column(this=exp.Identifier(this="id", quoted=False)))
+            exp.Last(
+                this=exp.Column(this=exp.Identifier(this="id", quoted=False)))
         )
         self.validate_parsing(
             "SELECT LAST(age, signup_date) FROM users",
             exp.Last(
                 this=exp.Column(this=exp.Identifier(this="age", quoted=False)),
-                expression=exp.Column(this=exp.Identifier(this="signup_date", quoted=False))
+                expression=exp.Column(
+                    this=exp.Identifier(this="signup_date", quoted=False))
             )
         )
         self.validate_parsing(
             "SELECT LAST_DAY(signup_date) FROM users",
-            exp.LastDay(this=exp.Column(this=exp.Identifier(this="signup_date", quoted=False)))
+            exp.LastDay(this=exp.Column(
+                this=exp.Identifier(this="signup_date", quoted=False)))
         )
         self.validate_parsing(
             "SELECT LAST_INSERT_ID() FROM users",
@@ -5030,7 +5033,8 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT LCASE(name) FROM users",
-            exp.Lower(this=exp.Column(this=exp.Identifier(this="name", quoted=False)))
+            exp.Lower(
+                this=exp.Column(this=exp.Identifier(this="name", quoted=False)))
         )
         self.validate_parsing(
             "SELECT LEAD(age) OVER (ORDER BY signup_date) FROM users",
@@ -5072,7 +5076,8 @@ class TestSingleStore(Validator):
             "SELECT name NOT LIKE 'B%' FROM users",
             exp.Not(
                 this=exp.Like(
-                    this=exp.Column(this=exp.Identifier(this="name", quoted=False)),
+                    this=exp.Column(
+                        this=exp.Identifier(this="name", quoted=False)),
                     expression=exp.Literal.string("B%")
                 )
             )
@@ -5099,21 +5104,24 @@ class TestSingleStore(Validator):
             "SELECT LOG(10, age) FROM users",
             exp.Log(
                 this=exp.Literal.number(10),
-                expression=exp.Column(this=exp.Identifier(this="age", quoted=False))
+                expression=exp.Column(
+                    this=exp.Identifier(this="age", quoted=False))
             )
         )
         self.validate_parsing(
             "SELECT LOG10(age) FROM users",
             exp.Log(
                 this=exp.Literal.number(10),
-                expression=exp.Column(this=exp.Identifier(this="age", quoted=False))
+                expression=exp.Column(
+                    this=exp.Identifier(this="age", quoted=False))
             )
         )
         self.validate_parsing(
             "SELECT LOG2(age) FROM users",
             exp.Log(
                 this=exp.Literal.number(2),
-                expression=exp.Column(this=exp.Identifier(this="age", quoted=False))
+                expression=exp.Column(
+                    this=exp.Identifier(this="age", quoted=False))
             )
         )
         self.validate_parsing(
@@ -5136,7 +5144,8 @@ class TestSingleStore(Validator):
             "SELECT MATCH(name) AGAINST ('search term') FROM products",
             exp.MatchAgainst(
                 this=exp.Literal.string("search term"),
-                expressions=[exp.Column(this=exp.Identifier(this="name", quoted=False))],
+                expressions=[
+                    exp.Column(this=exp.Identifier(this="name", quoted=False))],
             )
         )
         self.validate_parsing(
@@ -5147,11 +5156,13 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT MD5(email) FROM users",
-            exp.MD5(this=exp.Column(this=exp.Identifier(this="email", quoted=False)))
+            exp.MD5(this=exp.Column(
+                this=exp.Identifier(this="email", quoted=False)))
         )
         self.validate_parsing(
             "SELECT MEDIAN(age) FROM users",
-            exp.Median(this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+            exp.Median(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT MIN(age) FROM users",
@@ -5170,7 +5181,8 @@ class TestSingleStore(Validator):
             "SELECT MONTHS_BETWEEN(CURRENT_DATE, signup_date) FROM users",
             exp.MonthsBetween(
                 this=exp.CurrentDate(),
-                expression=exp.Column(this=exp.Identifier(this="signup_date", quoted=False)))
+                expression=exp.Column(
+                    this=exp.Identifier(this="signup_date", quoted=False)))
         )
         self.validate_parsing(
             "SELECT NOPARAM('SELECT * FROM users WHERE age = 25') FROM users",
@@ -5196,7 +5208,8 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT MONTH(signup_date) FROM users",
             exp.Month(
-                this=exp.Column(this=exp.Identifier(this="signup_date", quoted=False))
+                this=exp.Column(
+                    this=exp.Identifier(this="signup_date", quoted=False))
             )
         )
         self.validate_parsing(
@@ -5211,7 +5224,8 @@ class TestSingleStore(Validator):
             "SELECT MATCH(TABLE products2) AGAINST ('search term') FROM products2",
             exp.MatchAgainst(
                 this=exp.Literal.string("search term"),
-                expressions=[exp.Table(this=exp.Identifier(this="products2", quoted=False))],
+                expressions=[exp.Table(
+                    this=exp.Identifier(this="products2", quoted=False))],
             )
         )
         self.validate_parsing(
@@ -5279,12 +5293,14 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT POW(age, 2) FROM users",
-            exp.Pow(this=exp.Column(this=exp.Identifier(this="age", quoted=False)),
+            exp.Pow(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)),
                 expression=exp.Literal.number(2))
         )
         self.validate_parsing(
             "SELECT QUARTER(signup_date) FROM users",
-            exp.Quarter(this=exp.Column(this=exp.Identifier(this="signup_date", quoted=False)))
+            exp.Quarter(this=exp.Column(
+                this=exp.Identifier(this="signup_date", quoted=False)))
         )
         self.validate_parsing(
             "SELECT QUOTE(name) FROM users",
@@ -5316,7 +5332,7 @@ class TestSingleStore(Validator):
             exp.Reduce(
                 this=exp.Literal.number(0),
                 initial=exp.func("JSON_TO_ARRAY",
-                        exp.Literal(this='[1,2,3,4]', is_string=True)),
+                                 exp.Literal(this='[1,2,3,4]', is_string=True)),
                 merge=exp.Add(
                     this=exp.func("REDUCE_ACC"),
                     expression=exp.func("REDUCE_VALUE")))
@@ -5449,22 +5465,25 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT SHA1(email) FROM users",
-            exp.SHA(this=exp.Column(this=exp.Identifier(this="email", quoted=False)))
+            exp.SHA(this=exp.Column(
+                this=exp.Identifier(this="email", quoted=False)))
         )
         self.validate_parsing(
             "SELECT SHA2(email, 256) FROM users",
-            exp.SHA2(this=exp.Column(this=exp.Identifier(this="email", quoted=False)),
+            exp.SHA2(this=exp.Column(
+                this=exp.Identifier(this="email", quoted=False)),
                      length=exp.Literal.number(256))
         )
         self.validate_parsing(
             "SELECT SIGMOID(age) FROM users",
             exp.Div(
                 this=exp.Literal.number(1),
-                expression=exp.Paren( this=exp.Add(
+                expression=exp.Paren(this=exp.Add(
                     this=exp.Literal.number(1),
                     expression=exp.Exp(
                         this=exp.Neg(
-                            this=exp.Column(this=exp.Identifier(this="age", quoted=False))
+                            this=exp.Column(
+                                this=exp.Identifier(this="age", quoted=False))
                         )
                     )
                 ))
@@ -5472,11 +5491,13 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT SIGN(age) FROM users",
-            exp.Sign(this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+            exp.Sign(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT SIN(age) FROM users",
-            exp.func("SIN", exp.Column(this=exp.Identifier(this="age", quoted=False)))
+            exp.func("SIN",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT SLEEP(2) FROM users",
@@ -5497,25 +5518,29 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT STD(age) FROM users",
-            exp.Stddev(this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+            exp.Stddev(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT STDDEV(age) FROM users",
-            exp.Stddev(this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+            exp.Stddev(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT STDDEV_POP(age) FROM users",
-            exp.StddevPop(this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+            exp.StddevPop(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT STDDEV_SAMP(age) FROM users",
-            exp.StddevSamp(this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+            exp.StddevSamp(
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT STR_TO_DATE('2024-12-31', '%Y-%m-%d') FROM users",
             exp.StrToDate(
-                     this=exp.Literal.string("2024-12-31"),
-                     format=exp.Literal.string("%Y-%m-%d"))
+                this=exp.Literal.string("2024-12-31"),
+                format=exp.Literal.string("%Y-%m-%d"))
         )
         # TODO: think about rewriting this using CASE
         self.validate_parsing(
@@ -5527,7 +5552,8 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "STRING_BYTES(name)",
             exp.func("STRING_BYTES",
-                     exp.Column(this=exp.Identifier(this="name", quoted=False))),
+                     exp.Column(
+                         this=exp.Identifier(this="name", quoted=False))),
             run=False
         )
         self.validate_parsing(
@@ -5579,19 +5605,21 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT TAN(age) FROM users",
-            exp.func("TAN", exp.Column(this=exp.Identifier(this="age", quoted=False)))
+            exp.func("TAN",
+                     exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT TIME(signup_date) FROM users",
             exp.cast(
-                exp.Column(this=exp.Identifier(this="signup_date", quoted=False)),
+                exp.Column(
+                    this=exp.Identifier(this="signup_date", quoted=False)),
                 exp.DataType.Type.TIME
             )
         )
         self.validate_parsing(
             "SELECT TIME_BUCKET('1d') FROM orders",
             exp.DateBin(
-                     this=exp.Literal.string("1d"))
+                this=exp.Literal.string("1d"))
         )
         self.validate_parsing(
             "SELECT TIME_BUCKET('1d', '2019-03-14 06:04:12')",
@@ -5610,18 +5638,21 @@ class TestSingleStore(Validator):
         )
         self.validate_parsing(
             "SELECT TIME_FORMAT(signup_date, '%H:%i:%s') FROM users",
-            exp.TimeToStr(this=exp.Column(this=exp.Identifier(this="signup_date", quoted=False)),
-                     format=exp.Literal.string("%H:%M:%S"))
+            exp.TimeToStr(this=exp.Column(
+                this=exp.Identifier(this="signup_date", quoted=False)),
+                          format=exp.Literal.string("%H:%M:%S"))
         )
         self.validate_parsing(
             "SELECT TIME_TO_SEC(signup_date) FROM users",
             exp.func("TIME_TO_SEC",
-                     exp.Column(this=exp.Identifier(this="signup_date", quoted=False)))
+                     exp.Column(
+                         this=exp.Identifier(this="signup_date", quoted=False)))
         )
         self.validate_parsing(
             "SELECT TIMEDIFF(signup_date, CURRENT_TIMESTAMP) FROM users",
             exp.TimeDiff(
-                this=exp.Column(this=exp.Identifier(this="signup_date", quoted=False)),
+                this=exp.Column(
+                    this=exp.Identifier(this="signup_date", quoted=False)),
                 expression=exp.CurrentTimestamp()
             )
         )
@@ -5650,19 +5681,19 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT TO_BASE64(email) FROM users",
             exp.ToBase64(this=exp.Column(
-                         this=exp.Identifier(this="email", quoted=False)))
+                this=exp.Identifier(this="email", quoted=False)))
         )
         self.validate_parsing(
             "SELECT TO_CHAR(signup_date, 'YYYY-MM-DD') FROM users",
             exp.TimeToStr(this=exp.Column(
-                         this=exp.Identifier(this="signup_date", quoted=False)),
-                     format=exp.Literal.string("%Y-%m-%d"))
+                this=exp.Identifier(this="signup_date", quoted=False)),
+                format=exp.Literal.string("%Y-%m-%d"))
         )
         self.validate_parsing(
             "SELECT TO_DATE('2024-01-01', 'YYYY-MM-DD') FROM users",
             exp.StrToDate(
-                     this=exp.Literal.string("2024-01-01"),
-                     format=exp.Literal.string("%Y-%m-%d"))
+                this=exp.Literal.string("2024-01-01"),
+                format=exp.Literal.string("%Y-%m-%d"))
         )
         self.validate_parsing(
             "SELECT TO_DAYS(signup_date) FROM users",
@@ -5679,7 +5710,8 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT TO_JSON(users.*) FROM users",
             exp.func("TO_JSON", exp.Column(this=exp.Star(),
-                                      table=exp.Identifier(this="users", quoted=False)))
+                                           table=exp.Identifier(this="users",
+                                                                quoted=False)))
         )
         # TODO: add support of the struct type
         # self.validate_parsing(
@@ -5704,8 +5736,10 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT TO_TIMESTAMP('The date and time are 01/01/2018 2:30:15.123456', 'The date and time are MM/DD/YYYY HH:MI:SS.FF6') AS result",
             exp.StrToTime(
-                this=exp.Literal.string("The date and time are 01/01/2018 2:30:15.123456"),
-                format=exp.Literal.string("The date and time are %m/%d/%Y %I:%M:%S.%f")
+                this=exp.Literal.string(
+                    "The date and time are 01/01/2018 2:30:15.123456"),
+                format=exp.Literal.string(
+                    "The date and time are %m/%d/%Y %I:%M:%S.%f")
             )
         )
         self.validate_parsing(
@@ -5730,7 +5764,8 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT UCASE(name) FROM users",
             exp.Upper(this=
-                     exp.Column(this=exp.Identifier(this="name", quoted=False)))
+                      exp.Column(
+                          this=exp.Identifier(this="name", quoted=False)))
         )
         self.validate_parsing(
             "SELECT UNHEX('4D2') FROM users",
@@ -5771,12 +5806,12 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT VARIANCE(age) FROM users",
             exp.VariancePop(
-                     this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT VAR_SAMP(age) FROM users",
             exp.Variance(
-                     this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
+                this=exp.Column(this=exp.Identifier(this="age", quoted=False)))
         )
         self.validate_parsing(
             "SELECT VECTOR_ADD(age, age) FROM users",
@@ -5833,12 +5868,12 @@ class TestSingleStore(Validator):
         self.validate_parsing(
             "SELECT WEEK(signup_date) FROM users",
             exp.Week(this=exp.Column(
-                         this=exp.Identifier(this="signup_date", quoted=False)))
+                this=exp.Identifier(this="signup_date", quoted=False)))
         )
         self.validate_parsing(
             "SELECT WEEKDAY(signup_date) FROM users",
             exp.DayOfWeek(this=exp.Column(
-                         this=exp.Identifier(this="signup_date", quoted=False)))
+                this=exp.Identifier(this="signup_date", quoted=False)))
         )
         self.validate_parsing(
             "SELECT YEAR(signup_date) FROM users",
