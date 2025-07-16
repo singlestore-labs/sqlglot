@@ -5882,3 +5882,52 @@ class TestSingleStore(Validator):
                     this=exp.Identifier(this="signup_date", quoted=False))
             )
         )
+
+    def test_alter_database_parsing(self):
+        self.validate_parsing(
+            "ALTER DATABASE mydb SET SYNC REPLICATION",
+            exp.Alter(
+                #this=exp.Database(this=exp.Identifier(this="mydb")),
+                actions=[
+                    exp.Command(
+                        this=exp.Identifier(this="SET SYNC REPLICATION")
+                    )
+                ]
+            )
+        )
+
+        self.validate_parsing(
+            "ALTER DATABASE mydb SET ASYNC REPLICATION",
+            exp.Alter(
+                this=exp.Database(this=exp.Identifier(this="mydb")),
+                actions=[
+                    exp.Command(
+                        this=exp.Identifier(this="SET ASYNC REPLICATION")
+                    )
+                ]
+            )
+        )
+
+        self.validate_parsing(
+            "ALTER DATABASE mydb WITH SYNC REPLICATION",
+            exp.Alter(
+                this=exp.Database(this=exp.Identifier(this="mydb")),
+                actions=[
+                    exp.Command(
+                        this=exp.Identifier(this="WITH SYNC REPLICATION")
+                    )
+                ]
+            )
+        )
+
+        self.validate_parsing(
+            "ALTER DATABASE mydb WITH ASYNC REPLICATION",
+            exp.Alter(
+                this=exp.Database(this=exp.Identifier(this="mydb")),
+                actions=[
+                    exp.Command(
+                        this=exp.Identifier(this="WITH ASYNC REPLICATION")
+                    )
+                ]
+            )
+        )

@@ -368,6 +368,8 @@ class SingleStore(Dialect):
             TokenType.COLON_GT: exp.Cast
         }
 
+        ALTERABLES = parser.Parser.ALTERABLES | {TokenType.DATABASE}
+
         def _parse_match_against(self) -> exp.MatchAgainst:
             if self._match_text_seq("TABLE"):
                 expressions = []
