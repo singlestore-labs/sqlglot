@@ -13,7 +13,7 @@ from sqlglot import exp
 from sqlglot.dialects.mysql import _str_to_date
 from sqlglot.expressions import DataType
 from sqlglot.generator import ESCAPED_UNICODE_RE, unsupported_args
-from sqlglot.helper import csv, seq_get, is_int
+from sqlglot.helper import csv, seq_get, is_int, ensure_list
 from sqlglot.parser import build_coalesce
 from sqlglot.time import format_time
 from sqlglot.trie import new_trie
@@ -178,7 +178,7 @@ class SingleStore(Dialect):
     }
 
     @classmethod
-    def _format_time_hr(cls, expression: t.Optional[str | exp.Expression]) -> \
+    def _format_time_hr(cls, expression: t.Optional[t.Union[str, exp.Expression]]) -> \
         t.Optional[exp.Expression]:
         """Converts a time format in this dialect to its equivalent Python `strftime` format."""
         if isinstance(expression, str):
@@ -467,6 +467,56 @@ class SingleStore(Dialect):
             return self.expression(
                 exp.MatchAgainst, this=this, expressions=expressions
             )
+
+        def _parse_alter(self) -> t.Union[exp.Alter, exp.Command]:
+            start = self._prev
+
+            if self._match_text_seq("DEFINER", advance=False):
+                definer = self._parse_assignment()
+            else:
+                definer = None
+
+            if self._match_text_seq("SCHEMA_BINDING", "=", "ON"):
+                schema_binding = True
+            elif self._match_text_seq("SCHEMA_BINDING", "=", "OFF"):
+                schema_binding = False
+            else:
+                schema_binding = None
+
+            alter_token = self._match_set(self.ALTERABLES) and self._prev
+            if not alter_token:
+                return self._parse_as_command(start)
+
+            exists = self._parse_exists()
+            only = self._match_text_seq("ONLY")
+            this = self._parse_table(schema=True)
+            cluster = self._parse_on_property() if self._match(TokenType.ON) else None
+
+            if self._next:
+                self._advance()
+
+            parser = self.ALTER_PARSERS.get(self._prev.text.upper()) if self._prev else None
+            if parser:
+                actions = ensure_list(parser(self))
+                not_valid = self._match_text_seq("NOT", "VALID")
+                options = self._parse_csv(self._parse_property)
+
+                if not self._curr and actions:
+                    return self.expression(
+                        exp.Alter,
+                        this=this,
+                        kind=alter_token.text.upper(),
+                        exists=exists,
+                        actions=actions,
+                        only=only,
+                        options=options,
+                        cluster=cluster,
+                        not_valid=not_valid,
+                        definer=definer,
+                        schema_binding=schema_binding
+                    )
+
+            return self._parse_as_command(start)
 
         def _parse_alter_table_set(self) -> exp.AlterSet:
             alter_set = self.expression(exp.AlterSet)
@@ -3749,12 +3799,23 @@ class SingleStore(Dialect):
             elif isinstance(actions[0], exp.Schema):
                 actions = self.expressions(expression, key="actions",
                                            prefix="ADD COLUMN ")
+            elif isinstance(actions[0], exp.Query):
+                actions = "AS " + self.expressions(expression, key="actions")
             else:
                 actions = self.expressions(expression, key="actions", flat=True)
 
             kind = self.sql(expression, "kind")
+            definer = self.sql(expression, "definer")
+            definer = f" {definer}" if definer else ""
+            schema_binding = expression.args.get("schema_binding")
+            if schema_binding is True:
+                schema_binding = " SCHEMA_BINDING = ON"
+            elif schema_binding is False:
+                schema_binding = " SCHEMA_BINDING = OFF"
+            else:
+                schema_binding = ""
 
-            return f"ALTER {kind} {self.sql(expression, 'this')} {actions}"
+            return f"ALTER{definer}{schema_binding} {kind} {self.sql(expression, 'this')} {actions}"
 
         def attachoption_sql(self, expression: exp.AttachOption) -> str:
             self.unsupported("ATTACH options are not supported in SingleStore")
