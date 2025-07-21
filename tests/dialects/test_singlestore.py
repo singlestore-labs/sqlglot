@@ -5904,12 +5904,14 @@ class TestSingleStore(Validator):
                 this=exp.Table(this=exp.Identifier(this="users_view", quoted=False)),
                 kind="VIEW",
                 actions=[
-                    exp.Select(**{
-                        "expressions": [exp.Star()],
-                        "from": exp.From(
-                            this=exp.Table(this=exp.Identifier(this="users", quoted=False))
-                        ),
-                    })
+                    exp.Select(
+                        **{
+                            "expressions": [exp.Star()],
+                            "from": exp.From(
+                                this=exp.Table(this=exp.Identifier(this="users", quoted=False))
+                            ),
+                        }
+                    )
                 ],
             ),
         )
@@ -5919,12 +5921,14 @@ class TestSingleStore(Validator):
                 this=exp.Table(this=exp.Identifier(this="users_view", quoted=False)),
                 kind="VIEW",
                 actions=[
-                    exp.Select(**{
-                        "expressions": [exp.Star()],
-                        "from": exp.From(
-                            this=exp.Table(this=exp.Identifier(this="users", quoted=False))
-                        ),
-                    })
+                    exp.Select(
+                        **{
+                            "expressions": [exp.Star()],
+                            "from": exp.From(
+                                this=exp.Table(this=exp.Identifier(this="users", quoted=False))
+                            ),
+                        }
+                    )
                 ],
                 definer=exp.EQ(
                     this=exp.Column(this=exp.Identifier(this="DEFINER", quoted=False)),
@@ -5938,12 +5942,14 @@ class TestSingleStore(Validator):
                 this=exp.Table(this=exp.Identifier(this="users_view", quoted=False)),
                 kind="VIEW",
                 actions=[
-                    exp.Select(**{
-                        "expressions": [exp.Star()],
-                        "from": exp.From(
-                            this=exp.Table(this=exp.Identifier(this="users", quoted=False))
-                        ),
-                    })
+                    exp.Select(
+                        **{
+                            "expressions": [exp.Star()],
+                            "from": exp.From(
+                                this=exp.Table(this=exp.Identifier(this="users", quoted=False))
+                            ),
+                        }
+                    )
                 ],
                 schema_binding=True,
             ),
@@ -5954,12 +5960,14 @@ class TestSingleStore(Validator):
                 this=exp.Table(this=exp.Identifier(this="users_view", quoted=False)),
                 kind="VIEW",
                 actions=[
-                    exp.Select(**{
-                        "expressions": [exp.Star()],
-                        "from": exp.From(
-                            this=exp.Table(this=exp.Identifier(this="users", quoted=False))
-                        ),
-                    })
+                    exp.Select(
+                        **{
+                            "expressions": [exp.Star()],
+                            "from": exp.From(
+                                this=exp.Table(this=exp.Identifier(this="users", quoted=False))
+                            ),
+                        }
+                    )
                 ],
                 definer=exp.EQ(
                     this=exp.Column(this=exp.Identifier(this="DEFINER", quoted=False)),
